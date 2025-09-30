@@ -11,7 +11,7 @@ def load_normalize(csv_path):
     """
     df = pd.read_csv(csv_path) # read csv to pandas
     y = df.iloc[:,1].values.astype(float) # read Power
-    y_min, y_max == y.min(), y.max() #record min/max
+    y_min, y_max = y.min(), y.max() #record min/max
     if y_max == y_min:
         y_norm = np.zeros_like(y)
     else:
