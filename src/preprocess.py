@@ -10,13 +10,13 @@ def load_normalize(csv_path):
     return normalize sequence, primary min, primary max
     """
     df = pd.read_csv(csv_path) # read csv to pandas
-    y = df.iloc[:,1].values.astype(float) # read Power
+    y = df.iloc[:, 1].values.astype(float) # read Power
     y_min, y_max = y.min(), y.max() #record min/max
     if y_max == y_min:
-        y_norm = np.zeros_like(y)
+        y_norm = np.zeros_like(y, dtype=float)
     else:
         y_norm = (y - y_min) / (y_max - y_min) #normalize to [0,1]
-        return y_norm, y_min, y_max
+    return y_norm, y_min, y_max
 
 def sequences(y_norm, window_size=24, step=2):
     """
