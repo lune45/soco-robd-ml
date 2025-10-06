@@ -3,11 +3,11 @@ import numpy as np
 
 def load_normalize(csv_path):
     """
-    read data from csv
+    Read data from CSV.
 
-    normalize data to [0,1]
+    Normalize data to [0,1].
 
-    return normalize sequence, primary min, primary max
+    Return normalized sequence, global min, global max.
     """
     df = pd.read_csv(csv_path) # read csv to pandas
     y = df.iloc[:, 1].values.astype(float) # read Power
@@ -20,12 +20,12 @@ def load_normalize(csv_path):
 
 def sequences(y_norm, window_size=24, step=2):
     """
-    use slide window to cut long sequences into short sequences
+    Use a sliding window to cut a long sequence into short sequences.
 
-    return numpy array, shape = (num_sequences, window_size)
+    Return numpy array, shape = (num_sequences, window_size)
     """
     sequences = []
-    # start from 0 to len(y_norm)-window_size, move step everytime
+    # start from 0 to len(y_norm)-window_size, move by 'step' each time
     for start in range(0, len(y_norm) - window_size +1, step):
         sequences.append(y_norm[start: start + window_size])
     return np.array(sequences)

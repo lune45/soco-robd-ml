@@ -6,10 +6,10 @@ from src.train import compute_cost_loss
 
 def mla_robd_single_sequence(y_seq, x_ml_pred, m, la1, la2, la3):
     """
-    MLA-ROBD（算法1）单序列校准：
+    MLA-ROBD (Algorithm 1) per-sequence calibration:
     x_t = argmin_x [ f(x,y_t) + λ1 c(x,x_{t-1}) + λ2 c(x,v_t) + λ3 c(x, x~_t) ]
-    其中 f(x,y) = (m/2)(x-y)^2, c(a,b)=(a-b)^2, v_t=y_t, x~_t 为ML预测。
-    闭式：x_t = ((m+2λ2) y_t + 2λ1 x_{t-1} + 2λ3 x~_t) / (m + 2λ1 + 2λ2 + 2λ3)
+      where f(x,y) = (m/2)(x-y)^2, c(a,b)=(a-b)^2, v_t=y_t, and x~_t is the ML prediction.
+    Closed form: x_t = ((m+2λ2) y_t + 2λ1 x_{t-1} + 2λ3 x~_t) / (m + 2λ1 + 2λ2 + 2λ3)
     """
     T = len(y_seq)
     x_hybrid = np.zeros(T, dtype=float)
@@ -32,7 +32,7 @@ def mla_robd_rollout_torch(model: torch.nn.Module,
                            la3: float,
                            device: torch.device = torch.device("cpu")):
     """
-    可微MLA-ROBD：batch级自回归 + 闭式校准，返回 (x_ml, x_cal)。
+    Differentiable MLA-ROBD: batch-level autoregression + closed-form calibration, returns (x_ml, x_cal).
     y_batch: (B,T,1)
     """
     model = model.to(device)
@@ -53,7 +53,7 @@ def mla_robd_rollout_torch(model: torch.nn.Module,
         x_ml_t, hidden = model.forward_step(inp, hidden)  # (B,1,1)
         x_ml_all[:, t:t+1, :] = x_ml_t
 
-        # v_t = y_t, 闭式校准
+        # v_t = y_t, closed-form calibration
         x_cal_t = ((m + 2.0 * la2) * y_t + 2.0 * la1 * x_cal_tm1 + 2.0 * la3 * x_ml_t) / denom
         x_cal_all[:, t:t+1, :] = x_cal_t
 
@@ -79,7 +79,8 @@ def train_model_mla_robd(model: torch.nn.Module,
                           use_scheduler: bool = True,
                           device: torch.device = torch.device("cpu")):
     """
-    训练期融合：用校准后的 x_cal 在题意损失 (hitting+switching) 上优化模型参数；无固定epoch，早停触发结束。
+    Train-time fusion: optimize model parameters on the task loss (hitting+switching) using calibrated x_cal;
+    no fixed epochs — early stopping ends training.
     """
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)

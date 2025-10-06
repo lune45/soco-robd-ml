@@ -3,12 +3,12 @@ import torch.nn as nn
 
 def compute_cost_loss(x_pred, y_true, m=5.0):
     """
-    x_pred: 模型预测的决策 x，形状 (batch, seq_len, 1)
-    y_true: 观测序列 y（用作 hitting 计算的目标），形状 (batch, seq_len, 1)
-    按题意：
+    x_pred: model-predicted decisions x, shape (batch, seq_len, 1)
+    y_true: observed sequence y (target for hitting), shape (batch, seq_len, 1)
+    As specified:
       hitting = (m / 2) * (x_pred - y_true)^2
       switching = 0.5 * (x_t - x_{t-1})^2
-    总损失为二者的均值和，沿时间维对 switching 取差分。
+    Total loss is the sum (means over batch/time); switching uses time-differences.
     """
     hitting = (m / 2.0) * ((x_pred - y_true) ** 2).mean()
     switching = 0.5 * ((x_pred[:, 1:, :] - x_pred[:, :-1, :]) ** 2).mean()
@@ -16,13 +16,13 @@ def compute_cost_loss(x_pred, y_true, m=5.0):
 
 def train_model(model, train_loader, val_loader=None, epochs=10, lr=1e-3, m=5.0, weight_decay=1e-4, grad_clip=1.0, patience=10, use_scheduler=True):
     """
-    训练模型，支持：
-    - 验证集与早停（patience）
-    - 梯度裁剪（grad_clip）
-    - 学习率调度（有验证集时使用 ReduceLROnPlateau，否则 StepLR）
-    - 权重衰减（weight_decay）
+    Train a model with:
+    - Validation and early stopping (patience)
+    - Gradient clipping (grad_clip)
+    - LR scheduling (ReduceLROnPlateau with val, else StepLR)
+    - Weight decay (weight_decay)
 
-    返回：model, train_losses, val_losses（若提供验证集则加载最佳权重）
+    Returns: model, train_losses, val_losses (best weights loaded if val provided)
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     if use_scheduler:
@@ -67,7 +67,7 @@ def train_model(model, train_loader, val_loader=None, epochs=10, lr=1e-3, m=5.0,
             val_losses.append(v_avg)
             print(f"Epoch {ep+1}, loss={avg:.4f}, val_loss={v_avg:.4f}")
 
-            # 记录最佳
+            # Track the best validation score
             if v_avg < best_val - 1e-6:
                 best_val = v_avg
                 best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
@@ -78,12 +78,12 @@ def train_model(model, train_loader, val_loader=None, epochs=10, lr=1e-3, m=5.0,
                     print(f"Early stopping at epoch {ep+1}")
                     break
 
-            # 调度：基于验证损失
+            # Scheduler: step based on validation loss
             if scheduler is not None and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(v_avg)
         else:
             print(f"Epoch {ep+1}, loss={avg:.4f}")
-            # 无验证集时使用 StepLR
+            # Use StepLR when no validation set is provided
             if scheduler is not None and isinstance(scheduler, torch.optim.lr_scheduler.StepLR):
                 scheduler.step()
 
@@ -95,8 +95,8 @@ def train_model(model, train_loader, val_loader=None, epochs=10, lr=1e-3, m=5.0,
 
 def train_model_autoregressive(model, train_loader, val_loader=None, epochs=10, lr=1e-3, m=5.0, weight_decay=1e-4, grad_clip=1.0, patience=10, use_scheduler=True):
     """
-    自回归训练：输入为 [x_{t-1}^{model}, y_t]，t=0 用 0。
-    DataLoader 需提供 y 序列 (B,T,1)。
+    Autoregressive training: input is [x_{t-1}^{model}, y_t], with x_{-1}=0 at t=0.
+    DataLoader must provide y sequences of shape (B,T,1).
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     if use_scheduler:
