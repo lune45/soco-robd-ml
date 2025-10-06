@@ -4,9 +4,9 @@ import torch
 
 def compute_cost_np(x_seq: np.ndarray, y_seq: np.ndarray, m: float = 5.0):
     """
-    按题意计算单条序列的 hitting / switching / total 成本（numpy 版本）。
-    x_seq, y_seq: 一维数组，长度相同。
-    返回: hitting, switching, total（标量）
+    Compute hitting / switching / total cost per sequence (NumPy version).
+    x_seq, y_seq: 1D arrays with equal length.
+    Return: hitting, switching, total (scalars)
     """
     x_seq = x_seq.reshape(-1)
     y_seq = y_seq.reshape(-1)
@@ -24,14 +24,14 @@ def predict_with_teacher_forcing(model: torch.nn.Module,
                                  x_teacher_seq: np.ndarray,
                                  device: torch.device = torch.device("cpu")):
     """
-    使用 teacher forcing 的方式进行整段预测：特征为 [x_{t-1}^{teacher}, y_t]。
-    返回预测的 x 序列（numpy，一维）。
+    Sequence prediction with teacher forcing: features are [x_{t-1}^{teacher}, y_t].
+    Returns the predicted x sequence (NumPy, 1D).
     """
     T = len(y_seq)
     x_tf = x_teacher_seq.reshape(-1)
     y_flat = y_seq.reshape(-1)
 
-    # 构造 (1, T, 2) 的输入张量
+    # Build input tensor of shape (1, T, 2)
     X = np.zeros((1, T, 2), dtype=np.float32)
     for t in range(T):
         prev_x = x_tf[t - 1] if t > 0 else 0.0
@@ -51,8 +51,8 @@ def predict_autoregressive(model: torch.nn.Module,
                             y_seq: np.ndarray,
                             device: torch.device = torch.device("cpu")):
     """
-    自回归整段预测：每步输入 [x_{t-1}^{model}, y_t]，t=0 令 x_{-1}=0。
-    返回 numpy 一维预测序列。
+    Autoregressive prediction over the whole sequence: input per step is [x_{t-1}^{model}, y_t],
+    with x_{-1}=0 at t=0. Returns a 1D NumPy array.
     """
     T = len(y_seq)
     model = model.to(device)

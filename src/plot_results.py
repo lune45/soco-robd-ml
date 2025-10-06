@@ -65,7 +65,7 @@ def generate_plots():
         plt.savefig(os.path.join(RESULTS_DIR, 'test_all_methods_comparison.png'), dpi=150)
         plt.close()
 
-    # 逐序列可视化（前两个样例），展示 y / OBD / ML / MLA-ROBD
+    # Per-sequence visualization (first two examples): show y / OBD / ML / MLA-ROBD
     for i in [0, 1]:
         y_p = os.path.join(RESULTS_DIR, f'seq_{i}_y.txt')
         ml_p = os.path.join(RESULTS_DIR, f'seq_{i}_x_ml_prefusion.txt')
@@ -91,6 +91,6 @@ def generate_plots():
         plt.savefig(os.path.join(RESULTS_DIR, f'test_seq_{i}_comparison.png'), dpi=150)
         plt.close()
 
-    print('[Plot] 绘图完成，已输出至 results/ 目录。')
+    print('[Plot] Finished plotting; outputs are in results/.')
 
 
