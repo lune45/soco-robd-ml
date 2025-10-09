@@ -87,7 +87,6 @@ if __name__ == "__main__":
         weight_decay=5e-5, grad_clip=1.0, patience=25, use_scheduler=True
     )
 
-    # (Plotting has been moved to src/plot_results.py)
 
     # --------------------- Evaluation and saving results (test set) ---------------------
     from src.evaluate import compute_cost_np, predict_autoregressive
