@@ -19,34 +19,6 @@ def compute_cost_np(x_seq: np.ndarray, y_seq: np.ndarray, m: float = 5.0):
     return float(hitting), float(switching), float(total)
 
 
-def predict_with_teacher_forcing(model: torch.nn.Module,
-                                 y_seq: np.ndarray,
-                                 x_teacher_seq: np.ndarray,
-                                 device: torch.device = torch.device("cpu")):
-    """
-    Sequence prediction with teacher forcing: features are [x_{t-1}^{teacher}, y_t].
-    Returns the predicted x sequence (NumPy, 1D).
-    """
-    T = len(y_seq)
-    x_tf = x_teacher_seq.reshape(-1)
-    y_flat = y_seq.reshape(-1)
-
-    # Build input tensor of shape (1, T, 2)
-    X = np.zeros((1, T, 2), dtype=np.float32)
-    for t in range(T):
-        prev_x = x_tf[t - 1] if t > 0 else 0.0
-        X[0, t, 0] = prev_x
-        X[0, t, 1] = y_flat[t]
-
-    x_tensor = torch.from_numpy(X).to(device)
-    model = model.to(device)
-    model.eval()
-    with torch.no_grad():
-        pred = model(x_tensor)  # (1, T, 1)
-    pred_np = pred.cpu().numpy().reshape(-1)
-    return pred_np
-
-
 def predict_autoregressive(model: torch.nn.Module,
                             y_seq: np.ndarray,
                             device: torch.device = torch.device("cpu")):

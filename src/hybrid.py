@@ -137,7 +137,7 @@ def train_model_mla_robd(model: torch.nn.Module,
             print(f"Epoch {ep}, loss={train_loss:.4f}, val_loss={val_loss:.4f}")
             val_losses.append(val_loss)
 
-            if best_val - val_loss > min_delta:
+            if best_val - val_loss >= min_delta:
                 best_val = val_loss
                 best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
                 bad_epochs = 0
