@@ -133,6 +133,28 @@ if __name__ == "__main__":
 
 
 
+    # --------------------- Inference-time MLA-ROBD (closed-form) BEFORE train-time fusion ---------------------
+    from src.hybrid import mla_robd_single_sequence
+    la1_infer = 0.5
+    theta_infer = 0.5
+    la3_infer = la1_infer * theta_infer
+    la2_infer = la2
+
+    fused_inf_total_list = []
+    for i in range(len(test_seq)):
+        y_seq = np.array(test_seq[i]).reshape(-1)
+        x_ml = predict_autoregressive(trained_model, y_seq)
+        x_fused_inf = mla_robd_single_sequence(y_seq, x_ml, m, float(la1_infer), float(la2_infer), float(la3_infer))
+        _, _, tot_inf = compute_cost_np(x_fused_inf, y_seq, m=m)
+        fused_inf_total_list.append(tot_inf)
+        if i in example_indices:
+            os.makedirs("results", exist_ok=True)
+            np.savetxt(f"results/seq_{i}_x_mla_robd_infer.txt", x_fused_inf)
+
+    fused_inf_total_arr = np.array(fused_inf_total_list)
+    print(f"\n[Task 4] Inference-time MLA-ROBD (no training): mean={fused_inf_total_arr.mean():.4f}, median={np.median(fused_inf_total_arr):.4f}")
+    np.savetxt("results/test_mla_robd_inference_cost_total.txt", fused_inf_total_arr)
+
     # ==================== Task 4: Differentiable MLA-ROBD train-time fusion ====================
     print("\n" + "="*60)
     print("[Task 4] Starting train-time fusion: MLA-ROBD")
